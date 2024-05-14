@@ -2,6 +2,10 @@ const https = require('https');
 const middleware = require('./_common/middleware'); // Make sure this path is correct
 
 const handler = async (domain) => {
+  if (!domain) {
+    throw new Error('Domain is required');
+  }
+
   const dnsTypes = ['DNSKEY', 'DS', 'RRSIG'];
   const records = {};
 
@@ -19,7 +23,7 @@ const handler = async (domain) => {
       const dnsResponse = await new Promise((resolve, reject) => {
         const req = https.request(options, res => {
           let data = '';
-          
+
           res.on('data', chunk => {
             data += chunk;
           });
@@ -36,19 +40,18 @@ const handler = async (domain) => {
         req.end();
       });
 
-      if (dnsResponse.Answer) {
-        records[type] = { isFound: true, answer: dnsResponse.Answer, response: dnsResponse.Answer };
-      } else {
-        records[type] = { isFound: false, answer: null, response: dnsResponse };
-      }
+      const { Answer } = dnsResponse;
+      records[type] = {
+        isFound: Answer ? true : false,
+        answer: Answer,
+        response: dnsResponse
+      };
     } catch (error) {
-      throw new Error(`Error fetching ${type} record: ${error.message}`); // This will be caught and handled by the commonMiddleware
+      throw new Error(`Error fetching ${type} record: ${error.message}`);
     }
   }
 
-  return records;
+  return Object.assign({}, records);
 };
 
 module.exports = middleware(handler);
-module.exports.handler = middleware(handler);
-
