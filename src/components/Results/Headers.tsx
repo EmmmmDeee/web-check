@@ -1,20 +1,29 @@
-import { Card } from 'components/Form/Card';
-import Row from 'components/Form/Row';
-import { ReactNode } from 'react';
+import { Card, Row } from 'components/Form';
+import React from 'react';
 
-const HeadersCard = (props: { data: any, title: string, actionButtons: ReactNode }): JSX.Element => {
-  const headers = props.data;
+type HeadersCardProps = {
+  data: { [key: string]: string | number };
+  title: string;
+  actionButtons?: React.ReactNode;
+};
+
+const HeadersCard = (props: HeadersCardProps): JSX.Element => {
+  const { data, title, actionButtons } = props;
+  const hasHeaders = Object.keys(data).length > 0;
+
   return (
-    <Card heading={props.title} styles="grid-row: span 2;" actionButtons={props.actionButtons}>
-      {
-        Object.keys(headers).map((header: string, index: number) => {
-          return (
-            <Row key={`header-${index}`} lbl={header} val={headers[header]} />
-          )
-        })
-      }      
+    <Card
+      heading={title}
+      styles="grid-row: span 2;"
+      actionButtons={actionButtons && actionButtons}
+      key={title}
+    >
+      {hasHeaders &&
+        Object.entries(data).map(([header, val], index) => {
+          return <Row key={`header-${index}`} lbl={header} val={val} />;
+        })}
     </Card>
   );
-}
+};
 
 export default HeadersCard;
