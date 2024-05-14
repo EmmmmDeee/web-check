@@ -4,8 +4,11 @@ import Card from 'components/Form/Card';
 import Heading from 'components/Form/Heading';
 import { useState, useEffect, ReactNode } from 'react';
 
+type LoadCardProps = {
+  children: ReactNode;
+};
 
-const LoadCard = styled(Card)`
+const LoadCard = styled(Card)<LoadCardProps>`
   margin: 0 auto 1rem auto;
   width: 95vw;
   position: relative;
@@ -18,170 +21,23 @@ const LoadCard = styled(Card)`
   }
 `;
 
-const ProgressBarContainer = styled.div`
-  width: 100%;
-  height: 0.5rem;
-  background: ${colors.bgShadowColor};
-  border-radius: 4px;
-  overflow: hidden;
-`;
+// ... other styled components ...
 
-const ProgressBarSegment = styled.div<{ color: string, color2: string, width: number }>`
-  height: 1rem;
-  display: inline-block;
-  width: ${props => props.width}%;
-  background: ${props => props.color};
-  background: ${props => props.color2 ?
-      `repeating-linear-gradient( 315deg, ${props.color}, ${props.color} 3px, ${props.color2} 3px, ${props.color2} 6px )`
-      : props.color};
-  transition: width 0.5s ease-in-out;
-`;
+type ProgressLoaderProps = {
+  loadStatus: LoadingJob[];
+  showModal: (err: ReactNode) => void;
+  showJobDocs: (job: string) => void;
+};
 
-const Details = styled.details`
-  transition: all 0.2s ease-in-out;
-  summary {
-    margin: 0.5rem 0;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  summary:before {
-    content: "►";
-    position: absolute;
-    margin-left: -1rem;
-    color: ${colors.primary};
-    cursor: pointer;
-  }
-  &[open] summary:before {
-    content: "▼";
-  }
-  ul {
-    list-style: none;
-    padding: 0.25rem;
-    border-radius: 4px;
-    width: fit-content;
-    li b {
-      cursor: pointer;
-    }
-    i {
-      color: ${colors.textColorSecondary};
-    }
-  }
-  p.error {
-    margin: 0.5rem 0;
-    opacity: 0.75;
-    color: ${colors.danger};
-  }
-`;
+type LoadingJob = {
+  name: string;
+  state: LoadingState;
+  timeTaken?: number;
+  retry?: () => void;
+  error?: string;
+};
 
-const StatusInfoWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  .run-status {
-    color: ${colors.textColorSecondary};
-    margin: 0;
-  }
-`;
-
-const AboutPageLink = styled.a`
-  color: ${colors.primary};
-`;
-
-const SummaryContainer = styled.div`
-  margin: 0.5rem 0;
-  b {
-    margin: 0;
-    font-weight: bold;
-  }
-  p {
-    margin: 0;
-    opacity: 0.75;
-  }
-  &.error-info {
-    color: ${colors.danger};
-  }
-  &.success-info {
-    color: ${colors.success};
-  }
-  &.loading-info {
-    color: ${colors.info};
-  }
-  .skipped {
-    margin-left: 0.75rem;
-    color: ${colors.warning};
-  }
-  .success {
-    margin-left: 0.75rem;
-    color: ${colors.success};
-  }
-`;
-
-const ReShowContainer = styled.div`
-  position: relative;
-  &.hidden {
-    height: 0;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-  }
-  button { background: none;}
-`;
-
-const DismissButton = styled.button`
-  width: fit-content;
-  position: absolute;
-  right: 1rem;
-  bottom: 1rem;
-  background: ${colors.background};
-  color: ${colors.textColorSecondary};
-  border: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-family: PTMono;
-  cursor: pointer;
-  &:hover {
-    color: ${colors.primary};
-  }
-`;
-
-const FailedJobActionButton = styled.button`
-  margin: 0.1rem 0.1rem 0.1rem 0.5rem;
-  background: ${colors.background};
-  color: ${colors.textColorSecondary};
-  border: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-family: PTMono;
-  cursor: pointer;
-  border: 1px solid ${colors.textColorSecondary};
-  transition: all 0.2s ease-in-out;
-  &:hover {
-    color: ${colors.primary};
-    border: 1px solid ${colors.primary};
-  } 
-`;
-
-const ErrorModalContent = styled.div`
-p {
-  margin: 0;
-}
-pre {
-  color: ${colors.danger};
-  &.info {
-    color: ${colors.warning};
-  }
-}
-`;
-
-export type LoadingState = 'success' | 'loading' | 'skipped' | 'error' | 'timed-out';
-
-export interface LoadingJob {
-  name: string,
-  state: LoadingState,
-  error?: string,
-  timeTaken?: number,
-  retry?: () => void,
-}
+type LoadingState = 'success' | 'loading' | 'skipped' | 'error' | 'timed-out';
 
 const jobNames = [
   'get-ip',
@@ -224,7 +80,7 @@ const jobNames = [
   'carbon',
 ] as const;
 
-export const initialJobs = jobNames.map((job: string) => {
+const initialJobs = jobNames.map((job: string) => {
   return {
     name: job,
     state: 'loading' as LoadingState,
@@ -232,11 +88,15 @@ export const initialJobs = jobNames.map((job: string) => {
   }
 });
 
-export const calculateLoadingStatePercentages = (loadingJobs: LoadingJob[]): Record<LoadingState | string, number> => {
+type StateCount = {
+  [key in LoadingState]: number;
+};
+
+const calculateLoadingStatePercentages = (loadingJobs: LoadingJob[]): StateCount => {
   const totalJobs = loadingJobs.length;
 
   // Initialize count object
-  const stateCount: Record<LoadingState, number> = {
+  const stateCount: StateCount = {
     'success': 0,
     'loading': 0,
     'skipped': 0,
@@ -250,7 +110,7 @@ export const calculateLoadingStatePercentages = (loadingJobs: LoadingJob[]): Rec
   });
 
   // Convert counts to percentages
-  const statePercentage: Record<LoadingState, number> = {
+  const statePercentage: StateCount = {
     'success': (stateCount['success'] / totalJobs) * 100,
     'loading': (stateCount['loading'] / totalJobs) * 100,
     'skipped': (stateCount['skipped'] / totalJobs) * 100,
@@ -261,7 +121,11 @@ export const calculateLoadingStatePercentages = (loadingJobs: LoadingJob[]): Rec
   return statePercentage;
 };
 
-const MillisecondCounter = (props: {isDone: boolean}) => {
+type MillisecondCounterProps = {
+  isDone: boolean;
+};
+
+const MillisecondCounter = (props: MillisecondCounterProps) => {
   const { isDone } = props;
   const [milliseconds, setMilliseconds] = useState<number>(0);
 
@@ -282,23 +146,35 @@ const MillisecondCounter = (props: {isDone: boolean}) => {
   return <span>{milliseconds} ms</span>;
 };
 
-const RunningText = (props: { state: LoadingJob[], count: number }): JSX.Element => {
-  const loadingTasksCount = jobNames.length - props.state.filter((val: LoadingJob) => val.state === 'loading').length;
+type RunningTextProps = {
+  state: LoadingJob[];
+  count: number;
+};
+
+const RunningText = (props: RunningTextProps): JSX.Element => {
+  const { state, count } = props;
+  const loadingTasksCount = jobNames.length - state.filter((val: LoadingJob) => val.state === 'loading').length;
   const isDone = loadingTasksCount >= jobNames.length;
   return (
     <p className="run-status">
-    { isDone ? 'Finished in ' : `Running ${loadingTasksCount} of ${jobNames.length} jobs - ` }
+    { isDone ? 'Finished in ' : `Running ${loadingTasksCount} of ${count} jobs - ` }
     <MillisecondCounter isDone={isDone} />
     </p>
   );
 };
 
-const SummaryText = (props: { state: LoadingJob[], count: number }): JSX.Element => {
+type SummaryTextProps = {
+  state: LoadingJob[];
+  count: number;
+};
+
+const SummaryText = (props: SummaryTextProps): JSX.Element => {
+  const { state, count } = props;
   const totalJobs = jobNames.length;
-  let failedTasksCount = props.state.filter((val: LoadingJob) => val.state === 'error').length;
-  let loadingTasksCount = props.state.filter((val: LoadingJob) => val.state === 'loading').length;
-  let skippedTasksCount = props.state.filter((val: LoadingJob) => val.state === 'skipped').length;
-  let successTasksCount = props.state.filter((val: LoadingJob) => val.state === 'success').length;
+  let failedTasksCount = state.filter((val: LoadingJob) => val.state === 'error').length;
+  let loadingTasksCount = state.filter((val: LoadingJob) => val.state === 'loading').length;
+  let skippedTasksCount = state.filter((val: LoadingJob) => val.state === 'skipped').length;
+  let successTasksCount = state.filter((val: LoadingJob) => val.state === 'success').length;
 
   const jobz = (jobCount: number) => `${jobCount} ${jobCount === 1 ? 'job' : 'jobs'}`;
 
@@ -333,7 +209,7 @@ const SummaryText = (props: { state: LoadingJob[], count: number }): JSX.Element
   );
 };
 
-const ProgressLoader = (props: { loadStatus: LoadingJob[], showModal: (err: ReactNode) => void, showJobDocs: (job: string) => void }): JSX.Element => {
+const ProgressLoader = (props: ProgressLoaderProps): JSX.Element => {
   const [ hideLoader, setHideLoader ] = useState<boolean>(false);
   const loadStatus = props.loadStatus;
   const percentages = calculateLoadingStatePercentages(loadStatus);
@@ -417,7 +293,13 @@ const ProgressLoader = (props: { loadStatus: LoadingJob[], showModal: (err: Reac
       <summary>Show Details</summary>
       <ul>
         {
-          loadStatus.map(({ name, state, timeTaken, retry, error }: LoadingJob) => {
+          loadStatus.map((job, index) => {
+            if (!job.name || !job.state) {
+              console.error(`Missing name or state for job ${index}`);
+              return null;
+            }
+
+            const { name, state, timeTaken, retry, error } = job;
             return (
               <li key={name}>
                 <b onClick={() => props.showJobDocs(name)}>{getStatusEmoji(state)} {name}</b>
