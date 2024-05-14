@@ -1,6 +1,5 @@
-
-import { Card } from 'components/Form/Card';
-import Row, { RowProps }  from 'components/Form/Row';
+import { Card, CardProps } from 'components/Form/Card';
+import Row, { RowProps } from 'components/Form/Row';
 
 const cardStyles = `
   grid-row: span 2;
@@ -10,24 +9,43 @@ const cardStyles = `
   }
 `;
 
-const RobotsTxtCard = ( props: { data: { robots: RowProps[]}, title: string, actionButtons: any}): JSX.Element => {
-  const robots = props.data;
+type RobotsTxtCardProps = {
+  data: {
+    robots: RowProps[];
+  };
+  title: string;
+  actionButtons: any;
+} & CardProps;
+
+export const RobotsTxtCard: React.FC<RobotsTxtCardProps> = ({
+  data: { robots },
+  title,
+  actionButtons,
+  children,
+}) => {
   return (
-    <Card heading={props.title} actionButtons={props.actionButtons} styles={cardStyles}>
+    <Card
+      heading={title}
+      actionButtons={actionButtons}
+      styles={cardStyles}
+    >
+      {children}
       <div className="content">
-      {
-        robots.robots.length === 0 && <p>No crawl rules found.</p>
-      }
-      {
-        robots.robots.map((row: RowProps, index: number) => {
-          return (
-            <Row key={`${row.lbl}-${index}`} lbl={row.lbl} val={row.val} />
-          )
-        })
-      }
+        {
+          robots.length === 0 && <p>No crawl rules found.</p>
+        }
+        {
+          robots.map((row: RowProps, index: number) => {
+            return (
+              <Row
+                key={`${row.lbl}-${index}`}
+                lbl={row.lbl}
+                val={row.val}
+              />
+            )
+          })
+        }
       </div>
     </Card>
   );
 }
-
-export default RobotsTxtCard;
