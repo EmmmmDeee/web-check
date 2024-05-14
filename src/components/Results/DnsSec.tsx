@@ -3,208 +3,308 @@ import Row, { ExpandableRow, RowProps } from 'components/Form/Row';
 import Heading from 'components/Form/Heading';
 import colors from 'styles/colors';
 
+const DNS_KEY_TYPES = {
+  FLAGS: 0,
+  PROTOCOL: 1,
+  ALGORITHM: 2,
+};
 
+const DNS_KEY_TYPE_NAMES = {
+  [DNS_KEY_TYPES.FLAGS]: 'flags',
+  [DNS_KEY_TYPES.PROTOCOL]: 'protocol',
+  [DNS_KEY_TYPES.ALGORITHM]: 'algorithm',
+};
 
-const parseDNSKeyData = (data: string) => {
+const DNS_KEY_FLAG_MEANINGS = {
+  256: 'Zone Signing Key (ZSK)',
+  257: 'Key Signing Key (KSK)',
+};
+
+const DNS_KEY_PROTOCOL_MEANINGS = {
+  3: 'DNSSEC',
+};
+
+const DNS_KEY_ALGORITHM_MEANINGS = {
+  5: 'RSA/SHA-1',
+  7: 'RSASHA1-NSEC3-SHA1',
+  8: 'RSA/SHA-256',
+  10: 'RSA/SHA-512',
+  13: 'ECDSA Curve P-256 with SHA-256',
+  14: 'ECDSA Curve P-384 with SHA-384',
+  15: 'Ed25519',
+  16: 'Ed448',
+};
+
+const DNS_RECORD_TYPES = {
+  A: 1,
+  NS: 2,
+  CNAME: 5,
+  SOA: 6,
+  PTR: 12,
+  HINFO: 13,
+  MX: 15,
+  TXT: 16,
+  AAAA: 28,
+  SRV: 33,
+  NAPTR: 35,
+  DNAME: 39,
+  OPT: 41,
+  DS: 43,
+  RRSIG: 46,
+  NSEC: 47,
+  DNSKEY: 48,
+  NSEC3: 50,
+  NSEC3PARAM: 51,
+  TLSA: 52,
+  SMIMEA: 53,
+  HIP: 55,
+  NINFO: 56,
+  RKEY: 57,
+  TALINK: 58,
+  CDS: 59,
+  CDNSKEY: 60,
+  OPENPGPKEY: 61,
+  CSYNC: 62,
+  ZONEMD: 63,
+};
+
+const parseDNSKeyData = (data: string): DNSKeyData => {
   const dnsKey = data.split(' ');
 
-  const flags = parseInt(dnsKey[0]);
-  const protocol = parseInt(dnsKey[1]);
-  const algorithm = parseInt(dnsKey[2]);
-
-  let flagMeaning = '';
-  let protocolMeaning = '';
-  let algorithmMeaning = '';
-
-  // Flags
-  if (flags === 256) {
-    flagMeaning = 'Zone Signing Key (ZSK)';
-  } else if (flags === 257) {
-    flagMeaning = 'Key Signing Key (KSK)';
-  } else {
-    flagMeaning = 'Unknown';
-  }
-
-  // Protocol
-  protocolMeaning = protocol === 3 ? 'DNSSEC' : 'Unknown';
-
-  // Algorithm
-  switch (algorithm) {
-    case 5: 
-      algorithmMeaning = 'RSA/SHA-1';
-      break;
-    case 7: 
-      algorithmMeaning = 'RSASHA1-NSEC3-SHA1';
-      break;
-    case 8: 
-      algorithmMeaning = 'RSA/SHA-256';
-      break;
-    case 10: 
-      algorithmMeaning = 'RSA/SHA-512';
-      break;
-    case 13: 
-      algorithmMeaning = 'ECDSA Curve P-256 with SHA-256';
-      break;
-    case 14: 
-      algorithmMeaning = 'ECDSA Curve P-384 with SHA-384';
-      break;
-    case 15: 
-      algorithmMeaning = 'Ed25519';
-      break;
-    case 16: 
-      algorithmMeaning = 'Ed448';
-      break;
-    default: 
-      algorithmMeaning = 'Unknown';
-      break;
-  }
+  const keyTypes: DNSKeyType = dnsKey.map((value) => parseInt(value, 10));
+  const keyTypeNames = keyTypes.map((keyType) => DNS_KEY_TYPE_NAMES[keyType]);
+  const keyTypeMeanings = keyTypes.map((keyType) => {
+    switch (keyType) {
+      case DNS_KEY_TYPES.FLAGS:
+        return DNS_KEY_FLAG_MEANINGS[keyType];
+      case DNS_KEY_TYPES.PROTOCOL:
+        return DNS_KEY_PROTOCOL_MEANINGS[keyType];
+      case DNS_KEY_TYPES.ALGORITHM:
+        return DNS_KEY_ALGORITHM_MEANINGS[keyType];
+      default:
+        return 'Unknown';
+    }
+  });
 
   return {
-    flags: flagMeaning,
-    protocol: protocolMeaning,
-    algorithm: algorithmMeaning,
-    publicKey: dnsKey[3]
+    keyTypes,
+    keyTypeNames,
+    keyTypeMeanings,
+    publicKey: dnsKey[3],
   };
-}
+};
 
 const getRecordTypeName = (typeCode: number): string => {
-  switch(typeCode) {
-      case 1: return 'A';
-      case 2: return 'NS';
-      case 5: return 'CNAME';
-      case 6: return 'SOA';
-      case 12: return 'PTR';
-      case 13: return 'HINFO';
-      case 15: return 'MX';
-      case 16: return 'TXT';
-      case 28: return 'AAAA';
-      case 33: return 'SRV';
-      case 35: return 'NAPTR';
-      case 39: return 'DNAME';
-      case 41: return 'OPT';
-      case 43: return 'DS';
-      case 46: return 'RRSIG';
-      case 47: return 'NSEC';
-      case 48: return 'DNSKEY';
-      case 50: return 'NSEC3';
-      case 51: return 'NSEC3PARAM';
-      case 52: return 'TLSA';
-      case 53: return 'SMIMEA';
-      case 55: return 'HIP';
-      case 56: return 'NINFO';
-      case 57: return 'RKEY';
-      case 58: return 'TALINK';
-      case 59: return 'CDS';
-      case 60: return 'CDNSKEY';
-      case 61: return 'OPENPGPKEY';
-      case 62: return 'CSYNC';
-      case 63: return 'ZONEMD';
-      default: return 'Unknown';
+  const recordType = DNS_RECORD_TYPES[typeCode];
+  if (recordType) {
+    return recordType;
   }
-}
+  return 'Unknown';
+};
 
-const parseDSData = (dsData: string) => {
+const parseDSData = (dsData: string): DSData => {
   const parts = dsData.split(' ');
-  
-  const keyTag = parts[0];
-  const algorithm = getAlgorithmName(parseInt(parts[1], 10));
-  const digestType = getDigestTypeName(parseInt(parts[2], 10));
+
+  const keyTag = parseInt(parts[0], 10);
+  const algorithm = parseInt(parts[1], 10);
+  const digestType = parseInt(parts[2], 10);
   const digest = parts[3];
 
   return {
-      keyTag,
-      algorithm,
-      digestType,
-      digest
+    keyTag,
+    algorithm,
+    digestType,
+    digest,
   };
-}
+};
 
-const getAlgorithmName = (code: number) => {
-  switch(code) {
-      case 1: return 'RSA/MD5';
-      case 2: return 'Diffie-Hellman';
-      case 3: return 'DSA/SHA1';
-      case 5: return 'RSA/SHA1';
-      case 6: return 'DSA/NSEC3/SHA1';
-      case 7: return 'RSASHA1/NSEC3/SHA1';
-      case 8: return 'RSA/SHA256';
-      case 10: return 'RSA/SHA512';
-      case 12: return 'ECC/GOST';
-      case 13: return 'ECDSA/CurveP256/SHA256';
-      case 14: return 'ECDSA/CurveP384/SHA384';
-      case 15: return 'Ed25519';
-      case 16: return 'Ed448';
-      default: return 'Unknown';
+const getAlgorithmName = (code: number): string => {
+  switch (code) {
+    case 1:
+    case 5:
+      return 'RSA/MD5';
+    case 2:
+      return 'Diffie-Hellman';
+    case 3:
+      return 'DSA/SHA1';
+    case 7:
+    case 8:
+    case 10:
+      return 'RSA/SHA1';
+    case 12:
+      return 'ECC/GOST';
+    case 13:
+    case 14:
+      return 'ECDSA/CurveP256/SHA256';
+    case 15:
+      return 'Ed25519';
+    case 16:
+      return 'Ed448';
+    default:
+      return 'Unknown';
   }
-}
+};
 
-const getDigestTypeName = (code: number) => {
-  switch(code) {
-      case 1: return 'SHA1';
-      case 2: return 'SHA256';
-      case 3: return 'GOST R 34.11-94';
-      case 4: return 'SHA384';
-      default: return 'Unknown';
+const getDigestTypeName = (code: number): string => {
+  switch (code) {
+    case 1:
+      return 'SHA1';
+    case 2:
+      return 'SHA256';
+    case 3:
+      return 'GOST R 34.11-94';
+    case 4:
+      return 'SHA384';
+    default:
+      return 'Unknown';
   }
-}
+};
 
-const makeResponseList = (response: any): RowProps[] => {
-  const result = [] as RowProps[];
-  if (!response) return result;
-  if (typeof response.RD === 'boolean') result.push({ lbl: 'Recursion Desired (RD)', val: response.RD });
-  if (typeof response.RA === 'boolean') result.push({ lbl: 'Recursion Available (RA)', val: response.RA });
-  if (typeof response.TC === 'boolean') result.push({ lbl: 'TrunCation (TC)', val: response.TC });
-  if (typeof response.AD === 'boolean') result.push({ lbl: 'Authentic Data (AD)', val: response.AD });
-  if (typeof response.CD === 'boolean') result.push({ lbl: 'Checking Disabled (CD)', val: response.CD });
+const makeResponseList = (response: Response): RowProps[] => {
+  const result: RowProps[] = [];
+
+  if (response.RD !== undefined) {
+    result.push({ lbl: 'Recursion Desired (RD)', val: response.RD });
+  }
+  if (response.RA !== undefined) {
+    result.push({ lbl: 'Recursion Available (RA)', val: response.RA });
+  }
+  if (response.TC !== undefined) {
+    result.push({ lbl: 'TrunCation (TC)', val: response.TC });
+  }
+  if (response.AD !== undefined) {
+    result.push({ lbl: 'Authentic Data (AD)', val: response.AD });
+  }
+  if (response.CD !== undefined) {
+    result.push({ lbl: 'Checking Disabled (CD)', val: response.CD });
+  }
+
   return result;
 };
 
-const makeAnswerList = (recordData: any): RowProps[] => {
+const makeAnswerList = (recordData: Answer): RowProps[] => {
+  const { name, type, TTL, algorithm, flags, protocol, data } = recordData;
+
+  const label = getRecordTypeName(type);
+
   return [
-    { lbl: 'Domain', val: recordData.name },
-    { lbl: 'Type', val: `${getRecordTypeName(recordData.type)} (${recordData.type})` },
-    { lbl: 'TTL', val: recordData.TTL },
-    { lbl: 'Algorithm', val: recordData.algorithm },
-    { lbl: 'Flags', val: recordData.flags },
-    { lbl: 'Protocol', val: recordData.protocol },
-    { lbl: 'Public Key', val: recordData.publicKey },
-    { lbl: 'Key Tag', val: recordData.keyTag },
-    { lbl: 'Digest Type', val: recordData.digestType },
-    { lbl: 'Digest', val: recordData.digest },
+    { lbl: 'Domain', val: name },
+    { lbl: 'Type', val: `${label} (${type})` },
+    { lbl: 'TTL', val: TTL },
+    { lbl: 'Algorithm', val: algorithm },
+    { lbl: 'Flags', val: flags },
+    { lbl: 'Protocol', val: protocol },
+    { lbl: 'Public Key', val: data },
   ].filter((rowData) => rowData.val && rowData.val !== 'Unknown');
 };
 
-const DnsSecCard = (props: { data: any, title: string, actionButtons: any }): JSX.Element => {
-  const dnsSec = props.data;
-  return (
-    <Card heading={props.title} actionButtons={props.actionButtons}>
-      {
-        ['DNSKEY', 'DS', 'RRSIG'].map((key: string, index: number) => {
-          const record = dnsSec[key];
-          return (<div key={`${key}-${index}`}>
-          <Heading as="h3" size="small" color={colors.primary}>{key}</Heading>
-          {(record.isFound && record.answer) && (<>
-              <Row lbl={`${key} - Present?`} val="✅ Yes" />
-              {
-                record.answer.map((answer: any, index: number) => {
-                  const keyData = parseDNSKeyData(answer.data);
-                  const dsData = parseDSData(answer.data);
-                  const label = (keyData.flags && keyData.flags !== 'Unknown') ? keyData.flags : key;
-                  return (
-                  <ExpandableRow lbl={`Record #${index+1}`} val={label} rowList={makeAnswerList({ ...answer, ...keyData, ...dsData })} open />
-                );
-                })
-              }
-          </>)}
+type DNSKeyType = 0 | 1 | 2;
 
-            {(!record.isFound && record.response) && (
-              <ExpandableRow lbl={`${key} - Present?`} val={record.isFound ? '✅ Yes' : '❌ No'} rowList={makeResponseList(record.response)} />
+interface DNSKeyData {
+  keyTypes: DNSKeyType[];
+  keyTypeNames: string[];
+  keyTypeMeanings: string[];
+  publicKey: string;
+}
+
+interface DSData {
+  keyTag: number;
+  algorithm: number;
+  digestType: number;
+  digest: string;
+}
+
+interface Response {
+  RD?: boolean;
+  RA?: boolean;
+  TC?: boolean;
+  AD?: boolean;
+  CD?: boolean;
+}
+
+interface Answer {
+  name: string;
+  type: number;
+  TTL: number;
+  algorithm: number;
+  flags: number;
+  protocol: number;
+  data: string;
+}
+
+interface Props {
+  data: {
+    DNSKEY: {
+      isFound: boolean;
+      response?: Response;
+      answer?: Answer[];
+    };
+    DS: {
+      isFound: boolean;
+      response?: Response;
+      answer?: Answer[];
+    };
+    RRSIG: {
+      isFound: boolean;
+      response?: Response;
+      answer?: Answer[];
+    };
+  };
+  title: string;
+  actionButtons: any;
+}
+
+const DnsSecCard: React.FC<Props> = (props) => {
+  const { data, title, actionButtons } = props;
+
+  return (
+    <Card heading={title} actionButtons={actionButtons}>
+      {Object.entries(data).map(([key, record]) => {
+        const isFound = record.isFound;
+        const response = record.response;
+        const answer = record.answer;
+
+        return (
+          <div key={key}>
+            <Heading as="h3" size="small" color={colors.primary}>
+              {key}
+            </Heading>
+            {isFound && answer && answer.length > 0 ? (
+              answer.map((answerData, index) => {
+                const keyData = parseDNSKeyData(answerData.data);
+                const dsData = parseDSData(answerData.data);
+                const label =
+                  keyData.keyTypeMeanings[DNS_KEY_TYPES.FLAGS] &&
+                  keyData.keyTypeMeanings[DNS_KEY_TYPES.FLAGS] !== 'Unknown'
+                    ? keyData.keyTypeMeanings[DNS_KEY_TYPES.FLAGS]
+                    : key;
+
+                return (
+                  <ExpandableRow
+                    key={`${key}-${index}`}
+                    lbl={`Record #${index + 1}`}
+                    val={label}
+                    rowList={makeAnswerList({
+                      ...answerData,
+                      ...keyData,
+                      ...dsData,
+                    })}
+                    open
+                  />
+                );
+              })
+            ) : (
+              <ExpandableRow
+                lbl={`${key} - Present?`}
+                val={isFound ? '✅ Yes' : '❌ No'}
+                rowList={makeResponseList(response || {})}
+              />
             )}
-          </div>)
-        })
-      }
+          </div>
+        );
+      })}
     </Card>
   );
-}
+};
 
 export default DnsSecCard;
