@@ -1,3 +1,18 @@
-# https://www.robotstxt.org/robotstxt.html
+# This is a basic robots.txt file that allows all web crawlers to access all parts of the website.
+# For more information, see: https://www.robotstxt.org/robotstxt.html
+
 User-agent: *
 Disallow:
+
+# If you want to block certain web crawlers or prevent access to specific parts of your website,
+# you can uncomment and modify the lines below.
+
+# User-agent: BadBot
+# Disallow: /
+
+# User-agent: *
+# Disallow: /private/
+
+# User-agent: SpecificGoodBot
+# Allow: /
+# Disallow: /private/
