@@ -1,17 +1,45 @@
-import { Card } from 'components/Form/Card';
-import Row from 'components/Form/Row';
+import { Card, Row } from 'components/Form';
 
-const HttpSecurityCard = (props: { data: any, title: string, actionButtons: any }): JSX.Element => {
-  const data = props.data;
-  return (
-    <Card heading={props.title} actionButtons={props.actionButtons}>
-      <Row lbl="Content Security Policy" val={data.contentSecurityPolicy ? '✅ Yes' : '❌ No' } />
-      <Row lbl="Strict Transport Policy" val={data.strictTransportPolicy ? '✅ Yes' : '❌ No' } />
-      <Row lbl="X-Content-Type-Options" val={data.xContentTypeOptions ? '✅ Yes' : '❌ No' } />
-      <Row lbl="X-Frame-Options" val={data.xFrameOptions ? '✅ Yes' : '❌ No' } />
-      <Row lbl="X-XSS-Protection" val={data.xXSSProtection ? '✅ Yes' : '❌ No' } />
-    </Card>
-  );
+interface Props {
+  data: {
+    contentSecurityPolicy?: boolean;
+    strictTransportPolicy?: boolean;
+    xContentTypeOptions?: boolean;
+    xFrameOptions?: boolean;
+    xXSSProtection?: boolean;
+  };
+  title: string;
+  actionButtons?: JSX.Element;
 }
 
-export default HttpSecurityCard;
+export const HttpSecurityCard = ({ data, title, actionButtons }: Props): JSX.Element => {
+  return (
+    <Card heading={title} actionButtons={actionButtons ?? <></>}>
+      <Row
+        key="contentSecurityPolicy"
+        lbl="Content Security Policy"
+        val={data.contentSecurityPolicy ? '✅ Yes' : '❌ No'}
+      />
+      <Row
+        key="strictTransportPolicy"
+        lbl="Strict Transport Policy"
+        val={data.strictTransportPolicy ? '✅ Yes' : '❌ No'}
+      />
+      <Row
+        key="xContentTypeOptions"
+        lbl="X-Content-Type-Options"
+        val={data.xContentTypeOptions ? '✅ Yes' : '❌ No'}
+      />
+      <Row
+        key="xFrameOptions"
+        lbl="X-Frame-Options"
+        val={data.xFrameOptions ? '✅ Yes' : '❌ No'}
+      />
+      <Row
+        key="xxssProtection"
+        lbl="X-XSS-Protection"
+        val={data.xXSSProtection ? '✅ Yes' : '❌ No'}
+      />
+    </Card>
+  );
+};
