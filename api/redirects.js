@@ -1,9 +1,10 @@
+import got from 'got';
+
 const handler = async (url) => {
   const redirects = [url];
-  const got = await import('got');
 
   try {
-    await got.default(url, {
+    const response = await got(url, {
       followRedirect: true,
       maxRedirects: 12,
       hooks: {
@@ -17,6 +18,7 @@ const handler = async (url) => {
 
     return {
       redirects: redirects,
+      finalUrl: response.url,
     };
   } catch (error) {
     throw new Error(`Error: ${error.message}`);
@@ -24,6 +26,4 @@ const handler = async (url) => {
 };
 
 const middleware = require('./_common/middleware');
-
 module.exports = middleware(handler);
-module.exports.handler = middleware(handler);
