@@ -1,14 +1,22 @@
-
-import { Card } from 'components/Form/Card';
-import Row from 'components/Form/Row';
+import React from 'react';
+import { Card, Row } from 'components';
 import Heading from 'components/Form/Heading';
 import colors from 'styles/colors';
+import { any } from 'typescript';
+import { JSX } from 'react/jsx-runtime';
 
-const cardStyles = ``;
+interface MailConfigCardProps {
+  data: any;
+  title: string;
+  actionButtons?: any;
+}
 
-const MailConfigCard = (props: {data: any, title: string, actionButtons: any }): JSX.Element => {
-  const mailServer = props.data;
+const MailConfigCard: React.FC<MailConfigCardProps> = (props: MailConfigCardProps): JSX.Element => {
+  const mailServer = props.data || {};
   const txtRecords = (mailServer.txtRecords || []).join('').toLowerCase() || '';
+  const mxRecords = mailServer.mxRecords || [];
+  const mailServices = mailServer.mailServices || [];
+
   return (
     <Card heading={props.title} actionButtons={props.actionButtons} styles={cardStyles}>
       <Heading as="h3" color={colors.primary} size="small">Mail Security Checklist</Heading>
@@ -17,16 +25,16 @@ const MailConfigCard = (props: {data: any, title: string, actionButtons: any }):
       <Row lbl="DMARC" val={txtRecords.includes('dmarc')} />
       <Row lbl="BIMI" val={txtRecords.includes('bimi')} />
 
-      { mailServer.mxRecords && <Heading as="h3" color={colors.primary} size="small">MX Records</Heading>}
-      { mailServer.mxRecords && mailServer.mxRecords.map((record: any, index: number) => (
+      { mxRecords.length > 0 && <Heading as="h3" color={colors.primary} size="small">MX Records</Heading>}
+      { mxRecords.map((record: any, index: number) => (
           <Row lbl="" val="" key={index}>
             <span>{record.exchange}</span>
             <span>{record.priority ? `Priority: ${record.priority}` : ''}</span>
           </Row>
         ))
       }
-      { mailServer.mailServices.length > 0 && <Heading as="h3" color={colors.primary} size="small">External Mail Services</Heading>}
-      { mailServer.mailServices && mailServer.mailServices.map((service: any, index: number) => (
+      { mailServices.length > 0 && <Heading as="h3" color={colors.primary} size="small">External Mail Services</Heading>}
+      { mailServices.map((service: any, index: number) => (
         <Row lbl={service.provider} title={service.value} val="" key={index} />
         ))
       }
@@ -41,5 +49,7 @@ const MailConfigCard = (props: {data: any, title: string, actionButtons: any }):
     </Card>
   );
 }
+
+const cardStyles = ``;
 
 export default MailConfigCard;
