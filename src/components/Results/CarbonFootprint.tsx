@@ -11,11 +11,16 @@ opacity: 0.75;
 a { color: ${colors.primary}; }
 `;
 
-const CarbonCard = (props: { data: any, title: string, actionButtons: any }): JSX.Element => {
-  const carbons = props.data.statistics;
-  const initialUrl = props.data.scanUrl;
+type CarbonDataable = {
+  c?: number;
+  p?: number;
+}
 
-  const [carbonData, setCarbonData] = useState<{c?: number, p?: number}>({});
+const CarbonCard: React.FC<{ data: any, title: string, actionButtons: any }> = ({ data, title, actionButtons }) => {
+  const carbons = data.statistics;
+  const initialUrl = data.scanUrl;
+
+  const [carbonData, setCarbonData] = useState<CarbonDataable>({});
 
   useEffect(() => {
     const fetchCarbonData = async () => {
@@ -31,12 +36,12 @@ const CarbonCard = (props: { data: any, title: string, actionButtons: any }): JS
   }, [initialUrl]);
 
   return (
-    <Card heading={props.title} actionButtons={props.actionButtons}>
-      { (!carbons?.adjustedBytes && !carbonData.c) && <p>Unable to calculate carbon footprint for host</p>}
-      { carbons?.adjustedBytes > 0 && <>
+    <Card heading={title} actionButtons={actionButtons}>
+      {!carbons?.adjustedBytes && !carbonData.c && <p>Unable to calculate carbon footprint for host</p>}
+      {carbons?.adjustedBytes > 0 && carbons.adjustedBytes && <>
         <Row lbl="HTML Initial Size" val={`${carbons.adjustedBytes} bytes`} />
-        <Row lbl="CO2 for Initial Load" val={`${(carbons.co2.grid.grams * 1000).toPrecision(4)} grams`} />
-        <Row lbl="Energy Usage for Load" val={`${(carbons.energy * 1000).toPrecision(4)} KWg`} />
+        {carbons.co2.grid.grams && <Row lbl="CO2 for Initial Load" val={`${(carbons.co2.grid.grams * 1000).toPrecision(4)} grams`} />}
+        {carbons.energy && <Row lbl="Energy Usage for Load" val={`${(carbons.energy * 1000).toPrecision(4)} KWg`} />}
       </>}
       {carbonData.c && <Row lbl="CO2 Emitted" val={`${carbonData.c} grams`} />}
       {carbonData.p && <Row lbl="Better than average site by" val={`${carbonData.p}%`} />}
