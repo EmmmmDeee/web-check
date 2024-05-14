@@ -1,23 +1,10 @@
-import { Card } from 'components/Form/Card';
+import React from 'react';
+import { Card, Row } from 'components';
 import colors from 'styles/colors';
-import Row from 'components/Form/Row';
-import Heading  from 'components/Form/Heading';
+import Heading from 'components/Form/Heading';
 
-const styles = `
-  .content {
-    max-height: 50rem;
-    overflow-y: auto;
-  }
-
-  .scan-date {
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-    opacity: 0.75;
-  }
-`;
-
-const formatDate = (timestamp: number): string => {
-  if (isNaN(timestamp) || timestamp <= 0) return 'No Date';
+const formatDate = (timestamp: number | undefined): string => {
+  if (!timestamp || isNaN(timestamp) || timestamp <= 0) return 'No Date';
 
   const date = new Date(timestamp * 1000);
 
@@ -35,31 +22,46 @@ const formatDate = (timestamp: number): string => {
   return formatter.format(date);
 }
 
+interface SiteFeaturesCardProps {
+  data: any;
+  title: string;
+  actionButtons: any;
+}
 
+const SiteFeaturesCard: React.FC<SiteFeaturesCardProps> = (props) => {
+  const { data, title, actionButtons } = props;
+  const features = data?.groups?.filter((group: any) => group.categories.length > 0);
+  const filteredFeatures = useMemo(() => features?.map((group: any, index: number) => (
+    <div key={`${group.name}-${index}`}>
+      <Heading as="h4" size="small" color={colors.primary}>{group.name}</Heading>
+      { group.categories.map((category: any, subIndex: number) => (
+        <Row lbl={category.name} val={`${category.live} Live ${category.dead ? `(${category.dead} dead)` : ''}`} key={`${category.name}-${subIndex}`} />
+      ))
+      }
+    </div>
+  )), [features]);
 
-const SiteFeaturesCard = (props: { data: any, title: string, actionButtons: any }): JSX.Element => {
-  const features = props.data;
   return (
-    <Card heading={props.title} actionButtons={props.actionButtons} styles={styles}>
+    <Card heading={title} actionButtons={actionButtons} styles={{ __html: styles }}>
       <div className="content">
-        { (features?.groups || []).filter((group: any) => group.categories.length > 0).map((group: any, index: number) => (
-          <div key={`${group.name}-${index}`}>
-          <Heading as="h4" size="small" color={colors.primary}>{group.name}</Heading>
-          { group.categories.map((category: any, subIndex: number) => (
-            // <Row lbl={category.name} val={category.live} />
-            <Row lbl="" val="" key={`${category.name}-${subIndex}`}>
-              <span className="lbl">{category.name}</span>
-              <span className="val">{category.live} Live {category.dead ? `(${category.dead} dead)` : ''}</span>
-            </Row>
-          ))
-          }
-          </div>
-        ))
-        }
+        {filteredFeatures}
       </div>
-      <p className="scan-date">Last scanned on {formatDate(features.last)}</p>
+      <p className="scan-date">Last scanned on {formatDate(data?.last)}</p>
     </Card>
   );
 }
+
+const styles = `
+  .content {
+    max-height: 50rem;
+    overflow-y: auto;
+  }
+
+  .scan-date {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    opacity: 0.75;
+  }
+`;
 
 export default SiteFeaturesCard;
