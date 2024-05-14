@@ -3,11 +3,15 @@ FROM node:16-buster-slim AS build
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package*.json ./
 
 RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -sSf https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
+    apt-get update && \
     yarn install --production && \
-    rm -rf /app/node_modules/.cache
+    rm -rf /app/node_modules/.cache /var/lib/apt/lists/*
 
 COPY . .
 
@@ -18,16 +22,8 @@ FROM node:16-buster-slim AS final
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
 COPY --from=build /app .
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends chromium traceroute && \
-    chmod 755 /usr/bin/chromium && \
-    rm -rf /var/lib/apt/lists/* /app/node_modules/.cache
 
-EXPOSE ${PORT:-3000}
-
-ENV CHROME_PATH='/usr/bin/chromium'
-
-CMD ["yarn", "serve"]
