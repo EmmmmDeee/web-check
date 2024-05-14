@@ -1,12 +1,13 @@
 @font-face {
   font-family: 'PTMono';
-  src: url('assets/fonts/PTMono-Regular.ttf') format('truetype');
+  src: url('/assets/fonts/PTMono-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
 html {
   scroll-behavior: smooth;
+  line-height: 1.5;
 }
 
 body {
@@ -16,21 +17,19 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #141d2b;
+  background-color: #141d2b;
+  color: #fff;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-#fancy-background { color: var(--background, #141d2b); }
-
 
 ::selection {
   background: var(--primary, #9fef00);
   color: var(--background, #141d2b);
 }
-
 
 svg.rsm-svg {
   background: #2a3240;
@@ -43,4 +42,19 @@ svg.rsm-svg {
   --toastify-color-success: #20e253 !important;
   --toastify-color-warning: #f6f000 !important;
   --toastify-color-error: #f80363 !important;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background-color: #f5f5f5;
+    color: #141d2b;
+  }
+
+  :root {
+    --toastify-color-dark: #333 !important;
+    --toastify-color-info: #00b8d9 !important;
+    --toastify-color-success: #4caf50 !important;
+    --toastify-color-warning: #ffeb3b !important;
+    --toastify-color-error: #f44336 !important;
+  }
 }
