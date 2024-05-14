@@ -1,7 +1,5 @@
-
-import { Card } from 'components/Form/Card';
-import Row, { ExpandableRow } from 'components/Form/Row';
-import colors from 'styles/colors';
+import { Card, Row, ExpandableRow } from 'components/Form';
+import { colors } from 'styles/colors';
 
 const cardStyles = `
   max-height: 50rem;
@@ -17,44 +15,74 @@ const cardStyles = `
   }
 `;
 
-const SitemapCard = (props: {data: any, title: string, actionButtons: any }): JSX.Element => {
-  const normalSiteMap = props.data.url ||  props.data.urlset?.url || null;
-  const siteMapIndex = props.data.sitemapindex?.sitemap || null;
+interface SitemapCardProps {
+  data: {
+    url?: string[];
+    urlset?: {
+      url: string[];
+    };
+    sitemapindex?: {
+      sitemap: {
+        loc: string[];
+      }[];
+    };
+  };
+  title: string;
+  actionButtons?: JSX.Element;
+}
+
+const SitemapCard = ({ data, title, actionButtons }: SitemapCardProps): JSX.Element => {
+  const normalSiteMap = data.url || (data.urlset && data.urlset.url) || [];
+  const siteMapIndex = (data.sitemapindex && data.sitemapindex.sitemap) || [];
 
   const makeExpandableRowData = (site: any) => {
     const results = [];
-    if (site.lastmod) { results.push({lbl: 'Last Modified', val: site.lastmod[0]}); }
-    if (site.changefreq) { results.push({lbl: 'Change Frequency', val: site.changefreq[0]}); }
-    if (site.priority) { results.push({lbl: 'Priority', val: site.priority[0]}); }
+    if (site.lastmod) { results.push({ lbl: 'Last Modified', val: site.lastmod[0] }); }
+    if (site.changefreq) { results.push({ lbl: 'Change Frequency', val: site.changefreq[0] }); }
+    if (site.priority) { results.push({ lbl: 'Priority', val: site.priority[0] }); }
     return results;
   };
 
-  const getPathFromUrl = (url: string) => {
+  const getPathFromUrl = (url: string): string => {
     try {
       const urlObj = new URL(url);
-      return urlObj.pathname;
+      return urlObj.pathname || '';
     } catch (e) {
+      console.error(`Error parsing URL: ${url}`);
       return url;
-    }    
+    }
   };
 
   return (
-    <Card heading={props.title} actionButtons={props.actionButtons} styles={cardStyles}>
-      {
-        normalSiteMap && normalSiteMap.map((subpage: any, index: number) => {
-          return (<ExpandableRow lbl={getPathFromUrl(subpage.loc[0])} key={index} val="" rowList={makeExpandableRowData(subpage)}></ExpandableRow>)
-        })
-      }
-      { siteMapIndex && <p>
-        This site returns a sitemap index, which is a list of sitemaps.  
-      </p>}
-      {
-        siteMapIndex && siteMapIndex.map((subpage: any, index: number) => {
-          return (<Row lbl="" val="" key={index}><a href={subpage.loc[0]}>{getPathFromUrl(subpage.loc[0])}</a></Row>);
-        })
-      }
+    <Card heading={title} actionButtons={actionButtons} styles={cardStyles}>
+      {normalSiteMap.map((subpage: any, index: number) => {
+        const path = getPathFromUrl(subpage.loc[0]);
+        return (
+          <ExpandableRow
+            lbl={path}
+            key={index}
+            val=""
+            rowList={makeExpandableRowData(subpage)}
+          />
+        );
+      })}
+      {siteMapIndex.length > 0 && (
+        <>
+          <p>This site returns a sitemap index, which is a list of sitemaps.</p>
+          <ul>
+            {siteMapIndex.map((subpage: any, index: number) => {
+              const path = getPathFromUrl(subpage.loc[0]);
+              return (
+                <li key={index}>
+                  <a href={subpage.loc[0]}>{path}</a>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
     </Card>
   );
-}
+};
 
 export default SitemapCard;
