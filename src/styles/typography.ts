@@ -1,5 +1,4 @@
-
-export const TextSizes = {
+const TextSizes = {
   xSmall: '0.75rem',
   small: '1rem',
   medium: '1.5rem',
@@ -8,8 +7,8 @@ export const TextSizes = {
   xxLarge: '4rem',
 };
 
-export const TextReset = `
-  font-size: ${TextSizes.small};
+const TextReset = `
+  font-size: var(--text-size, ${TextSizes.small});
   font-family: PTMono, Helvetica, Arial, sans-serif;
   font-weight: 400;
   font-style: normal;
@@ -21,3 +20,10 @@ export const TextReset = `
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 `;
+
+export { TextSizes, TextReset };
+
+
+body {
+  --text-size: ${TextSizes.medium};
+}
