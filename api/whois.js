@@ -12,6 +12,9 @@ const getBaseDomain = (url) => {
   }
   let noProtocolUrl = url.replace(protocol, '');
   const parsed = psl.parse(noProtocolUrl);
+  if (!parsed.domain) {
+    throw new Error(`Unable to parse domain from URL: ${url}`);
+  }
   return protocol + parsed.domain;
 };
 
@@ -61,12 +64,12 @@ const fetchFromInternic = async (hostname) => {
         const parsedData = parseWhoisData(data);
         resolve(parsedData);
       } catch (error) {
-        reject(error);
+        reject(new Error(`Error parsing whois data: ${error.message}`));
       }
     });
 
     client.on('error', (err) => {
-      reject(err);
+      reject(new Error(`Error connecting to Internic whois server: ${err.message}`));
     });
   });
 };
@@ -83,18 +86,14 @@ const fetchFromMyAPI = async (hostname) => {
   }
 };
 
-const handler = async (url) => {
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = 'http://' + url;
+const validateHostname = (hostname) => {
+  const parsed = psl.parse(hostname);
+  if (!parsed.domain) {
+    throw new Error(`Invalid hostname: ${hostname}`);
   }
+};
 
-  let hostname;
-  try {
-    hostname = getBaseDomain(new URL(url).hostname);
-  } catch (error) {
-    throw new Error(`Unable to parse URL: ${error}`);
-  }
-
+const handlerLogic = async (hostname) => {
   const [internicData, whoisData] = await Promise.all([
     fetchFromInternic(hostname),
     fetchFromMyAPI(hostname)
@@ -106,6 +105,24 @@ const handler = async (url) => {
   };
 };
 
-module.exports = middleware(handler);
-module.exports.handler = middleware(handler);
+const handler = (url) => {
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'http://' + url;
+  }
+
+  let hostname;
+  try {
+    hostname = getBaseDomain(new URL(url).hostname);
+    validateHostname(hostname);
+  } catch (error) {
+    throw new Error(`Error processing URL: ${error.message}`);
+  }
+
+  return handlerLogic(hostname);
+};
+
+module.exports = {
+  handler: middleware(handler),
+  handlerLogic
+};
 
