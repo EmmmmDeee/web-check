@@ -1,22 +1,22 @@
 # Build settings and site core config
 [build]
   base = "/"
-  command = "yarn build"
+  command = "yarn run build" # Use yarn's run script to ensure proper resolution of scripts
   publish = "build"
   functions = "api"
 
 # Environmental variables and optional secrets
 [build.environment]
-  # Build configuration env vars (uncomment if you want to conigure these)
-  # CI="false" # Set CI to false, to prevent warnings from exiting the build
-  # CHROME_PATH='/usr/bin/chromium' # Path to Chromium binary
-  # NODE_VERSION = "16.16.0"  # Set the version of Node.js to use
+  # Build configuration env vars (uncomment if you want to configure these)
+  CI = "false" # Set CI to false, to prevent warnings from exiting the build
+  CHROME_PATH = '/usr/bin/chromium' # Path to Chromium binary
+  NODE_VERSION = "16.16.0" # Set the version of Node.js to use
 
   # Optional secrets and API keys (uncomment if you want to add these)
-  # GOOGLE_CLOUD_API_KEY=''     # Google Cloud API key, for running Lighthouse scans
-  # BUILT_WITH_API_KEY=''       # BuiltWith API key, for detecting site features
-  # REACT_APP_SHODAN_API_KEY='' # Shodan API key, for using Shodan scan API
-  # REACT_APP_WHO_API_KEY=''    # WhoAPI key, for iniiating client-side whois lookup
+  # GOOGLE_CLOUD_API_KEY = '<YOUR_GOOGLE_CLOUD_API_KEY>' # Google Cloud API key, for running Lighthouse scans
+  # BUILT_WITH_API_KEY = '<YOUR_BUILT_WITH_API_KEY>' # BuiltWith API key, for detecting site features
+  # REACT_APP_SHODAN_API_KEY = '<YOUR_SHODAN_API_KEY>' # Shodan API key, for using Shodan scan API
+  # REACT_APP_WHO_API_KEY = '<YOUR_WHO_API_KEY>' # WhoAPI key, for initiating client-side whois lookup
 
 # Redirect the /api/* path to the lambda functions
 [[redirects]]
@@ -29,13 +29,13 @@
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200  
+  status = 200
 
 # Plugins
 [[plugins]]
-package = "netlify-plugin-chromium"
+  package = "netlify-plugin-chromium"
   [plugins.inputs]
-  packageManager = "yarn"
+    packageManager = "yarn"
 
 # Set any security headers here
 [[headers]]
@@ -43,3 +43,8 @@ package = "netlify-plugin-chromium"
   [headers.values]
   # Uncomment to enable Netlify user control. Requires premium plan.
   # Basic-Auth = "someuser:somepassword anotheruser:anotherpassword"
+  # Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+  # Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';"
+  # X-Content-Type-Options = "nosniff"
+  # X-Frame-Options = "SAMEORIGIN"
+  # X-XSS-Protection = "1; mode=block"
