@@ -1,4 +1,4 @@
-import { InputHTMLAttributes } from 'react';
+import { InputHTMLAttributes, ReactElement } from 'react';
 import styled from 'styled-components';
 import colors from 'styles/colors';
 import { InputSize, applySize } from 'styles/dimensions';
@@ -6,25 +6,27 @@ import { InputSize, applySize } from 'styles/dimensions';
 type Orientation = 'horizontal' | 'vertical';
 
 interface Props {
-  id: string,
-  value: string,
-  label?: string,
-  placeholder?: string,
-  disabled?: boolean,
-  size?: InputSize,
+  id: string;
+  value: string;
+  label?: string;
+  placeholder?: string;
+  disabled?: boolean;
+  size?: InputSize;
   orientation?: Orientation;
-  handleChange: (nweVal: React.ChangeEvent<HTMLInputElement>) => void,
-};
+  type?: string;
+  handleChange: React.ChangeEventHandler<HTMLInputElement>;
+}
 
 type SupportedElements = HTMLInputElement | HTMLLabelElement | HTMLDivElement;
 interface StyledInputTypes extends InputHTMLAttributes<SupportedElements> {
   inputSize?: InputSize;
   orientation?: Orientation;
-};
+  type?: string;
+}
 
 const InputContainer = styled.div<StyledInputTypes>`
   display: flex;
-  ${props => props.orientation === 'vertical' ? 'flex-direction: column;' : ''};
+  flex-direction: ${(props) => (props.orientation === 'vertical' ? 'column' : 'row')};
 `;
 
 const StyledInput = styled.input<StyledInputTypes>`
@@ -34,36 +36,55 @@ const StyledInput = styled.input<StyledInputTypes>`
   border-radius: 0.25rem;
   font-family: PTMono;
   box-shadow: 3px 3px 0px ${colors.backgroundDarker};
+  outline: none;
+
   &:focus {
-    outline: 1px solid ${colors.primary}
+    box-shadow: 3px 3px 0px ${colors.primary};
   }
 
-  ${props => applySize(props.inputSize)};
+  &:disabled {
+    background: ${colors.backgroundDarker};
+    cursor: not-allowed;
+  }
+
+  ${(props) => applySize(props.inputSize)};
 `;
 
 const StyledLabel = styled.label<StyledInputTypes>`
   color: ${colors.textColor};
-  ${props => applySize(props.inputSize)};
+  ${(props) => applySize(props.inputSize)};
   padding: 0;
   font-size: 1.6rem;
+
+  &[for='${(props) => props.htmlFor}'] {
+    margin-right: 0.5rem;
+  }
 `;
 
-const Input = (inputProps: Props): JSX.Element => {
-
-  const { id, value, label, placeholder, disabled, size, orientation, handleChange } = inputProps;
-
+const Input = ({
+  id,
+  value,
+  label,
+  placeholder,
+  disabled,
+  size,
+  orientation,
+  type = 'text',
+  handleChange,
+}: Props): ReactElement => {
   return (
-  <InputContainer orientation={orientation}>
-    { label && <StyledLabel htmlFor={id} inputSize={size}>{ label }</StyledLabel> }
-    <StyledInput
-      id={id}
-      value={value}
-      placeholder={placeholder}
-      disabled={disabled}
-      onChange={handleChange}
-      inputSize={size}
-    />
-  </InputContainer>
+    <InputContainer orientation={orientation}>
+      {label && <StyledLabel htmlFor={id} inputSize={size}>{label}</StyledLabel>}
+      <StyledInput
+        id={id}
+        value={value}
+        placeholder={placeholder}
+        disabled={disabled}
+        onChange={handleChange}
+        inputSize={size}
+        type={type}
+      />
+    </InputContainer>
   );
 };
 
