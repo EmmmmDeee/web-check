@@ -2,31 +2,32 @@ const traceroute = require('traceroute');
 const url = require('url');
 const middleware = require('./_common/middleware');
 
-const handler = async (urlString, context) => {
+const traceHost = async (urlString, context) => {
   // Parse the URL and get the hostname
-  const urlObject = url.parse(urlString);
-  const host = urlObject.hostname;
+  const parsedUrl = url.parse(urlString);
+  const host = parsedUrl.hostname;
 
   if (!host) {
     throw new Error('Invalid URL provided');
   }
 
   // Traceroute with callback
-  const result = await new Promise((resolve, reject) => {
-    traceroute.trace(host, (err, hops) => {
-      if (err || !hops) {
+  const hops = await new Promise((resolve, reject) => {
+    traceroute.trace(host, (err, result) => {
+      if (err || !result) {
         reject(err || new Error('No hops found'));
       } else {
-        resolve(hops);
+        resolve(result);
       }
     });
   });
 
   return {
     message: "Traceroute completed!",
-    result,
+    hops,
   };
 };
 
-module.exports = middleware(handler);
-module.exports.handler = middleware(handler);
+const handler = middleware(traceHost);
+module.exports = { handler, traceHost };
+
