@@ -1,7 +1,10 @@
-interface Props {
-  message: string,
-};
+import React from 'react';
+import { JSX } from 'react/jsx-runtime';
 
-const Demo = ({ message }: Props): JSX.Element => <div>{message}</div>;
+interface Props {
+  message: string;
+}
+
+const Demo: React.FC<Props> = ({ message }): JSX.Element => <div>{message}</div>;
 
 export default Demo;
